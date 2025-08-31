@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "TF_1 Export Manifest (v1)",
+  "type": "object",
+  "required": [
+    "schema_version","model_name","version","created_utc","framework",
+    "input_signature","label_space","train_window","metrics","data_hash","scaler_refs"
+  ],
+  "properties": {
+    "schema_version": { "const": "v1" },
+    "model_name": { "type": "string", "minLength": 1 },
+    "version": { "type": "string", "minLength": 1 },
+    "created_utc": { "type": "string", "format": "date-time" },
+    "framework": { "type": "string", "enum": ["tensorflow","pytorch","sklearn","other"] },
+    "code_commit": { "type": "string" },
+    "dataset_hash": { "type": "string" },
+    "feature_set_version": { "type": "string" },
+    "label_schema_version": { "type": "string" },
+    "input_signature": { "type": "object" },
+    "label_space": { "type": "object" },
+    "train_window": {
+      "type": "object",
+      "required": ["from_utc","to_utc"],
+      "properties": {
+        "from_utc": { "type": "string", "format": "date-time" },
+        "to_utc":   { "type": "string", "format": "date-time" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "required": ["sharpe_sim","max_drawdown_sim","f1_macro"],
+      "properties": {
+        "sharpe_sim": { "type": "number" },
+        "max_drawdown_sim": { "type": "number" },
+        "f1_macro": { "type": "number" },
+        "ece": { "type": "number" },
+        "brier": { "type": "number" }
+      }
+    },
+    "calibration": {
+      "type": "object",
+      "required": ["method"],
+      "properties": {
+        "method": { "type": "string", "enum": ["none","temperature","isotonic","platt"] },
+        "temperature": { "type": "number" },
+        "n_bins": { "type": "integer", "minimum": 1 }
+      },
+      "additionalProperties": true
+    },
+    "data_hash": { "type": "string" },
+    "scaler_refs": { "type": "object" },
+    "wandb_run_id": { "type": "string" }
+  },
+  "additionalProperties": true
+}

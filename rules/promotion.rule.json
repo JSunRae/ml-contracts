@@ -1,0 +1,7 @@
+{
+  "and": [
+    { ">=": [ { "var": "metrics.sharpe_sim" }, 1.5 ] },
+    { ">=": [ { "var": "metrics.f1_macro" }, 0.40 ] },
+    { ">=": [ { "var": "metrics.max_drawdown_sim" }, -0.15 ] }
+  ]
+}
