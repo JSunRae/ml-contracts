@@ -1,0 +1,23 @@
+{
+  "schema_version": "v1",
+  "model_name": "example_model",
+  "version": "1.0.0",
+  "created_utc": "2025-09-01T12:00:00Z",
+  "framework": "tensorflow",
+  "input_signature": {},
+  "label_space": {},
+  "train_window": {"from_utc": "2025-08-01T00:00:00Z", "to_utc": "2025-08-31T23:59:59Z"},
+  "metrics": {"sharpe_sim": 1.2, "max_drawdown_sim": -0.1, "f1_macro": 0.8},
+  "data_hash": "abc123",
+  "scaler_refs": {},
+  "export_manifest": {
+    "data_collection": {
+      "policy_version": "v1",
+      "session_timezone": "America/New_York",
+      "l2_window": "08:30-11:00",
+      "bar_lookbacks": {"1s": 5, "1h": 30},
+      "provider": "",
+      "symbol_policy_version": "v1"
+    }
+  }
+}

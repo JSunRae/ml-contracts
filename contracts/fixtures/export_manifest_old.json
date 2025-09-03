@@ -1,0 +1,13 @@
+{
+  "schema_version": "v1",
+  "model_name": "legacy_model",
+  "version": "0.9.0",
+  "created_utc": "2025-08-15T12:00:00Z",
+  "framework": "tensorflow",
+  "input_signature": {},
+  "label_space": {},
+  "train_window": {"from_utc": "2025-07-01T00:00:00Z", "to_utc": "2025-07-31T23:59:59Z"},
+  "metrics": {"sharpe_sim": 0.9, "max_drawdown_sim": -0.2, "f1_macro": 0.7},
+  "data_hash": "def456",
+  "scaler_refs": {}
+}

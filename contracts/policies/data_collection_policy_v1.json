@@ -1,0 +1,12 @@
+{
+  "policy_version": "v1",
+  "session_timezone": "America/New_York",
+  "l2_window_default": "08:30-11:00",
+  "calendar_id": "XNYS",
+  "recommended_bar_lookbacks": {"1s": 5, "1h": 30},
+  "symbol_policy": {
+    "format": "uppercase, dot→dash allowed",
+    "version": "v1",
+    "examples": ["BRK.B→BRK-B", "BF.B→BF-B"]
+  }
+}
