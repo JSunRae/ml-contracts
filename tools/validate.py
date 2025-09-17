@@ -1,10 +1,33 @@
 import json
 import pathlib
 import sys
-from jsonschema import validate, Draft202012Validator
+from jsonschema import Draft202012Validator, Draft7Validator
 
 def _load(p):
     return json.loads(pathlib.Path(p).read_text())
+
+def _load_text(p: pathlib.Path) -> str:
+    return pathlib.Path(p).read_text()
+
+
+def _choose_validator(schema: dict):
+    """Pick a jsonschema Validator based on $schema meta.
+    Defaults to Draft202012Validator; supports draft-07 for bars schemas.
+    """
+    meta = (schema.get("$schema") or "").lower()
+    if "draft-07" in meta:
+        Draft7Validator.check_schema(schema)
+        return Draft7Validator
+    # Fallback to 2020-12
+    Draft202012Validator.check_schema(schema)
+    return Draft202012Validator
+
+
+def _validate_instance(instance: dict, schema: dict):
+    Validator = _choose_validator(schema)
+    Validator(schema=schema).validate(instance)
+    return True
+
 
 def validate_manifest(manifest_path, schema_path):
     """
@@ -12,9 +35,34 @@ def validate_manifest(manifest_path, schema_path):
     export_manifest.data_collection still pass.
     """
     m, s = _load(manifest_path), _load(schema_path)
-    Draft202012Validator.check_schema(s)
-    validate(instance=m, schema=s)
+    _validate_instance(m, s)
     return True
+
+
+def validate_jsonl_per_line(jsonl_path: str, schema_path: str):
+    """Validate a JSON Lines file where each line is a JSON object matching schema.
+    Returns (ok: bool, count: int). Prints first error details to stdout on failure.
+    """
+    s = _load(schema_path)
+    Validator = _choose_validator(s)
+
+    count = 0
+    for i, raw in enumerate(pathlib.Path(jsonl_path).read_text().splitlines(), start=1):
+        line = raw.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError as e:
+            print(f"ERROR: line {i} is not valid JSON: {e}")
+            return False, count
+        try:
+            Validator(schema=s).validate(obj)
+        except Exception as e:
+            print(f"ERROR: line {i} failed schema validation: {e}")
+            return False, count
+        count += 1
+    return True, count
 
 def load_policy(policy_path):
     """Load data collection policy JSON."""
@@ -55,15 +103,50 @@ def compare_manifest_to_policy(manifest_path, policy_path):
 def main(argv=None):
     argv = argv or sys.argv[1:]
     if not argv or argv[0] in {"-h", "--help"}:
-        print("Usage: validate.py <manifest.json> [policy.json] [schema=schemas/manifest.schema.json]", file=sys.stderr)
+        print(
+            "Usage:\n"
+            "  Export manifest: validate.py <manifest.json> [policy.json] [schema=schemas/manifest.schema.json]\n"
+            "  Bars JSONL:      validate.py bars-jsonl <bars_download_manifest.jsonl> [schema=schemas/bars_download_manifest.schema.json]\n"
+            "  Bars coverage:   validate.py bars-coverage <bars_coverage_manifest.json> [schema=schemas/bars_coverage_manifest.schema.json]",
+            file=sys.stderr,
+        )
         return 2
+    # Subcommands for bars schemas
+    if argv[0] == "bars-jsonl":
+        if len(argv) < 2:
+            print("ERROR: missing JSONL path", file=sys.stderr)
+            return 2
+        jsonl_path = pathlib.Path(argv[1])
+        schema_path = pathlib.Path("schemas/bars_download_manifest.schema.json")
+        for arg in argv[2:]:
+            if arg.startswith("schema="):
+                schema_path = pathlib.Path(arg.split("=", 1)[1])
+        ok, n = validate_jsonl_per_line(str(jsonl_path), str(schema_path))
+        if not ok:
+            return 1
+        print(f"Schema validation: PASS (records={n})")
+        return 0
 
+    if argv[0] == "bars-coverage":
+        if len(argv) < 2:
+            print("ERROR: missing coverage JSON path", file=sys.stderr)
+            return 2
+        coverage_path = pathlib.Path(argv[1])
+        schema_path = pathlib.Path("schemas/bars_coverage_manifest.schema.json")
+        for arg in argv[2:]:
+            if arg.startswith("schema="):
+                schema_path = pathlib.Path(arg.split("=", 1)[1])
+        validate_manifest(str(coverage_path), str(schema_path))
+        print("Schema validation: PASS")
+        return 0
+
+    # Default path: export manifest validation (with optional policy compare)
     manifest_path = pathlib.Path(argv[0])
     policy_path = None
     schema_path = pathlib.Path("schemas/manifest.schema.json")
     for arg in argv[1:]:
         if arg.startswith("schema="):
-            schema_path = pathlib.Path(arg.split("=",1)[1])
+            schema_path = pathlib.Path(arg.split("=", 1)[1])
         else:
             policy_path = pathlib.Path(arg)
 

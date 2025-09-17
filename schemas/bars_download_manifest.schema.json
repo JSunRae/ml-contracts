@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/JSunRae/ml-contracts/schemas/bars_download_manifest.schema.json",
+  "title": "Bars Download Manifest — per-line record (v1)",
+  "description": "Schema for a single JSON Lines record inside bars_download_manifest.jsonl. Each line is an append-only audit event for a saved bars file.",
+  "type": "object",
+  "$defs": {
+    "isoTimestampLoose": {
+      "description": "ISO-like timestamp. Allows naive or TZ-aware strings. Example: 2025-09-15T09:30:00 or 2025-09-15T09:30:00Z or with offset.",
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})?$"
+    }
+  },
+  "required": [
+    "schema_version",
+    "written_at",
+    "vendor",
+    "file_format",
+    "symbol",
+    "bar_size",
+    "path",
+    "filename",
+    "rows",
+    "columns"
+  ],
+  "properties": {
+    "schema_version": { "const": "bars_manifest.v1" },
+    "written_at": { "$ref": "#/$defs/isoTimestampLoose" },
+    "vendor": { "type": "string", "minLength": 1 },
+    "source": { "type": "string" },
+    "file_format": { "type": "string", "minLength": 1 },
+    "symbol": { "type": "string", "minLength": 1 },
+    "bar_size": { "type": "string", "enum": ["1 hour", "1 min", "1 sec"] },
+    "path": { "type": "string", "minLength": 1 },
+    "filename": { "type": "string", "minLength": 1 },
+    "rows": { "type": "integer", "minimum": 0 },
+    "columns": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "time_start": { "$ref": "#/$defs/isoTimestampLoose" },
+    "time_end": { "$ref": "#/$defs/isoTimestampLoose" }
+  },
+  "additionalProperties": true
+}
