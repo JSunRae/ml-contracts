@@ -1,6 +1,7 @@
 import pathlib
 import json
 import subprocess
+import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 SCHEMA = ROOT / "schemas/manifest.schema.json"
@@ -9,9 +10,10 @@ FIXTURES = ROOT / "contracts" / "fixtures"
 
 
 def run_validate(manifest, policy=None):
-    cmd = ["python", str(VALIDATE), str(manifest), f"schema={SCHEMA}"]
+    cmd = [sys.executable, str(VALIDATE), str(manifest)]
     if policy:
-        cmd.insert(2, str(policy))
+        cmd.append(str(policy))
+    cmd.append(f"schema={SCHEMA}")
     proc = subprocess.run(cmd, capture_output=True, text=True)
     return proc.returncode, proc.stdout + proc.stderr
 

@@ -1,0 +1,36 @@
+{
+  "schema_version": "bars_coverage.v1",
+  "generated_at": "2025-09-16T02:10:00",
+  "entries": [
+    {
+      "symbol": "AAPL",
+      "bar_size": "1 min",
+      "total": { "date_start": "2025-09-10", "date_end": "2025-09-15" },
+      "days": [
+        {
+          "date": "2025-09-15",
+          "time_start": "2025-09-15T09:30:00",
+          "time_end": "2025-09-15T16:00:00",
+          "path": "/data/ML/bars/minute/AAPL/2025-09-15.parquet",
+          "filename": "2025-09-15.parquet",
+          "rows": 389
+        }
+      ]
+    },
+    {
+      "symbol": "AAPL",
+      "bar_size": "1 sec",
+      "total": { "date_start": "2025-09-12", "date_end": "2025-09-15" },
+      "days": [
+        {
+          "date": "2025-09-15",
+          "time_start": "2025-09-15T09:30:02",
+          "time_end": "2025-09-15T15:59:57",
+          "path": "/data/ML/bars/second/AAPL/2025-09-15.parquet",
+          "filename": "2025-09-15.parquet",
+          "rows": 23450
+        }
+      ]
+    }
+  ]
+}
