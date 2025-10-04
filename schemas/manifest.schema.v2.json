@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "TF_1 Export Manifest (v2)",
+  "title": "TF_1 Export Manifest (v2) Snapshot",
   "type": "object",
   "$defs": {
     "kpi": {

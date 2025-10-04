@@ -1,7 +1,12 @@
 {
   "and": [
-    { ">=": [ { "var": "metrics.sharpe_sim" }, 1.5 ] },
-    { ">=": [ { "var": "metrics.f1_macro" }, 0.40 ] },
-    { ">=": [ { "var": "metrics.max_drawdown_sim" }, -0.15 ] }
+    { ">=": [ { "var": "metrics.sharpe_sim.value" }, 1.5 ] },
+    { ">=": [ { "var": "metrics.f1_macro.value" }, 0.40 ] },
+    { ">=": [ { "var": "metrics.minority_recall.value" }, 0.45 ] },
+    { ">=": [ { "var": "metrics.max_drawdown_sim.value" }, -0.15 ] },
+    { "<=": [ { "var": "latency_metrics.p95_ms.value" }, 25.0 ] },
+    { "<=": [ { "var": "latency_metrics.max_ms.value" }, 45.0 ] },
+    { "<=": [ { "var": "stability.variance.value" }, 0.05 ] },
+    { "<=": [ { "var": "stability.max_regime_delta.value" }, 0.20 ] }
   ]
 }

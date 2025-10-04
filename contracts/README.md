@@ -14,6 +14,17 @@ This repo is the source of truth for cross-boundary data collection defaults.
 - ML exports should stamp effective values into `export_manifest.data_collection` for reproducibility.
 - Optional: compare a manifest to the policy and print non-fatal warnings:
 
+### Manifest v2 quick reference
+
+- Required identity fields: `dataset_version`, `data_hash`, `feature_hash`, `train_window.{from_utc,to_utc}`.
+- Required diagnostics:
+	- Aggregate KPIs (`metrics`) with `sharpe_sim`, `max_drawdown_sim`, `f1_macro`, `minority_recall`.
+	- `latency_metrics` (`p50_ms`, `p95_ms`, `p99_ms`, `max_ms`).
+	- `stability` (`variance`, `max_regime_delta`, optional `rolling_sharpe_std`, `notes`).
+	- `regime_metrics[]` per regime plus sample sizes.
+	- `calibration.metrics` with `ece` and `brier` whenever `calibration.method != "none"`.
+- See `fixtures/model_manifest_valid.json` for a canonical instance and `rules/promotion.rule.json` for the promotion thresholds.
+
 ## Usage
 
 - Validate only: `tools/validate.py <manifest.json> schema=schemas/manifest.schema.json`
@@ -27,6 +38,10 @@ This repo is the source of truth for cross-boundary data collection defaults.
 Usage guidance:
 - Prefer the coverage manifest for planning/resume and gap detection vs policy windows.
 - Use the append-only manifest for lineage, validation, and reconciliation.
+
+### Promotion rule summary
+
+Promotion gating relies on `rules/promotion.rule.json`. The rule expects the manifest fields above and enforces sharpe/drawdown, F1 macro, minority recall, latency (p95 + max), and stability variance/max-regime-delta thresholds. Trading should evaluate manifests against this rule before promoting model artifacts.
 
 ## Notes
 

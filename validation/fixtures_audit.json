@@ -1,0 +1,17 @@
+{
+  "fixtures": [
+    {
+      "fixture": "model_manifest_valid.json",
+      "valid": true,
+      "errors": []
+    },
+    {
+      "fixture": "model_manifest_invalid_missing_field.json",
+      "valid": false,
+      "errors": [
+        "'data_hash' is a required property"
+      ]
+    }
+  ],
+  "invalid_examples": 1
+}

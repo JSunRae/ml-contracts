@@ -49,6 +49,12 @@ Downstream repos should:
 - Track schema changes via tags and `schema_version`.
 - Update submodules and validation logic when schema changes.
 - Use the data collection policy defaults and stamp effective values into `export_manifest.data_collection` on model export for reproducibility.
+- Populate the v2-only required identity fields before promotion:
+  - `dataset_version` – semantic identifier for the parquet bundle TF_1 trained on.
+  - `data_hash` – canonical sha256 over the curated dataset contents (see `docs/NORTH_STAR.md`).
+  - `feature_hash` – sha256 of the exported feature set definition.
+- Provide the expanded evaluation diagnostics
+  (`metrics`, `latency_metrics`, `stability`, `regime_metrics`, `calibration.metrics`) so the shared promotion rule can gate on them.
 
 ## Data Collection Policy
 
@@ -68,6 +74,35 @@ Verification notes
 - Old manifest sample: PASS (`contracts/fixtures/export_manifest_old.json`)
 - New manifest with data_collection: PASS (`contracts/fixtures/export_manifest_with_policy.json`)
 - Policy mismatch produces warnings (e.g., changing `l2_window` to `09:30-12:00` emits a WARNING without failing)
+- Model manifest v2 fixture: PASS (`fixtures/model_manifest_valid.json`)
+- Promotion rule evaluation covers thresholds for sharpe, F1 macro, minority recall, drawdown, latency (p95/max), and stability (variance/max_regime_delta).
+
+### Manifest v2 contract
+
+`schemas/manifest.schema.json` now targets `schema_version="v2"` and requires:
+
+- Identity: `dataset_version`, `data_hash`, `feature_hash` (min length 8), `train_window` bounds.
+- Model inputs: `input_signature`, `label_space`, `scaler_refs`.
+- Evaluation KPIs: aggregate `metrics` block with `sharpe_sim`, `max_drawdown_sim`, `f1_macro`, `minority_recall` plus optional macro precision/recall/AUC.
+- Diagnostics:
+  - `latency_metrics` (`p50_ms`, `p95_ms`, `p99_ms`, `max_ms`, optional `window`).
+  - `stability` (`variance`, `max_regime_delta`, optional `rolling_sharpe_std`, `notes`).
+  - `regime_metrics[]` per regime with Gini KPIs and sample_size.
+  - `calibration` with `method`, `evaluated_at`, and `metrics.{ece,brier}`.
+
+Legacy v1 manifests still validate because `tools/validate.py` resolves the corresponding snapshot (`manifest.schema.v1.json`) automatically. Consumers should migrate exporters to emit all v2 blocks before the shared promotion gate flips to “fail on missing fields”.
+
+### Promotion rule predicates
+
+`rules/promotion.rule.json` codifies the production gate used by Trading and TF_1. The JSON-Logic rule enforces:
+
+- Sharpe ratio floor: `metrics.sharpe_sim.value >= 1.5`.
+- Drawdown cap: `metrics.max_drawdown_sim.value >= -0.15`.
+- Classification quality: `metrics.f1_macro.value >= 0.40`, `metrics.minority_recall.value >= 0.45`.
+- Latency guardrails: `latency_metrics.p95_ms.value <= 25`, `latency_metrics.max_ms.value <= 45`.
+- Stability bounds: `stability.variance.value <= 0.05`, `stability.max_regime_delta.value <= 0.20`.
+
+Downstream promotion checks should load the rule from this repo (or copy verbatim) so both sides fail the same manifest preconditions.
 
 ## Model Input Sequence Definitions
 
@@ -136,6 +171,27 @@ Notes
 - Keep bar sizes separate for planning and partitioning.
 - Partial days are expected; coverage `time_start/time_end` reflect actual file coverage.
 - These schemas are new and do not change the TF_1 export manifest; no `schema_version` bump is required for `schemas/manifest.schema.json`.
+
+### Migration & release plan
+
+Follow this sequence when cutting over to manifest v2 + tightened promotion rules:
+
+1. **Trading / Data Platform**
+  - Publish dataset manifests (version + hash) alongside parquet drops.
+  - Update promotion service to load `rules/promotion.rule.json` and require v2 manifests.
+  - Add CI to run `python3 tools/validate.py <manifest> schema=schemas/manifest.schema.json` against promoted models.
+2. **TF_1**
+  - Emit `schema_version="v2"` manifests with the required diagnostics listed above.
+  - Validate locally via `python3 tools/validate.py manifest.json` before export.
+  - Ensure export bundles include the upstream dataset manifest for provenance.
+3. **Contracts repo**
+  - Land schema/rule/doc updates on main.
+  - Run `pytest -q` and `python3 tools/validate.py` on legacy + v2 fixtures (see Verification notes).
+  - Tag the release `v2.0.0` and notify #ml-platform + #trading-platform.
+4. **Downstream re-pin**
+  - TF_1 and Trading bump the git submodule/tag, rerun their CI, and roll out promotion rule enforcement in staging before production.
+
+Document any future predicate tweaks in both `CHANGELOG.md` and this section.
 
 ## North-Star: Repo Roles & Guardrails
 

@@ -1,0 +1,55 @@
+{
+  "schema_version": "v2",
+  "model_name": "example_model",
+  "version": "2025-09-25",
+  "created_utc": "2025-09-25T12:00:00Z",
+  "framework": "tensorflow",
+  "dataset_hash": "deadbeef1234",
+  "feature_hash": "abc123def4567890",
+  "input_signature": {
+    "granularity": "hour",
+    "sequence_length": 1750,
+    "features": ["feat_a", "feat_b"]
+  },
+  "label_space": {"labels": ["up", "down"]},
+  "train_window": {
+    "from_utc": "2025-07-01T00:00:00Z",
+    "to_utc": "2025-09-01T00:00:00Z"
+  },
+  "metrics": {
+    "sharpe_sim": {"value": 1.85},
+    "max_drawdown_sim": {"value": -0.12},
+    "f1_macro": {"value": 0.58},
+    "minority_recall": {"value": 0.55}
+  },
+  "latency_metrics": {
+    "p50_ms": {"value": 11.2},
+    "p95_ms": {"value": 18.5},
+    "p99_ms": {"value": 24.9},
+    "max_ms": {"value": 32.4}
+  },
+  "stability": {
+    "variance": {"value": 0.018},
+    "max_regime_delta": {"value": 0.11}
+  },
+  "regime_metrics": [
+    {
+      "regime": "bull",
+      "metrics": {
+        "sharpe_sim": {"value": 2.05},
+        "f1_macro": {"value": 0.60},
+        "minority_recall": {"value": 0.57}
+      }
+    }
+  ],
+  "calibration": {
+    "method": "temperature",
+    "evaluated_at": "2025-09-20T15:00:00Z",
+    "metrics": {
+      "ece": {"value": 0.018},
+      "brier": {"value": 0.176}
+    }
+  },
+  "data_hash": "deadbeef1234",
+  "scaler_refs": {"standard": "scaler_v2.pkl"}
+}

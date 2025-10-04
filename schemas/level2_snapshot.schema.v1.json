@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Level2 Order Book Snapshot (v1) Columns",
+  "description": "Canonical minimal column/type specification for level2 snapshot parquet fixture.",
+  "type": "object",
+  "required": ["schema_version", "columns"],
+  "properties": {
+    "schema_version": { "const": "level2_snapshot.v1" },
+    "columns": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "type"],
+        "properties": {
+          "name": { "type": "string" },
+          "type": { "type": "string", "enum": ["int64", "float64", "string", "timestamp[ns]"] },
+          "nullable": { "type": "boolean" }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

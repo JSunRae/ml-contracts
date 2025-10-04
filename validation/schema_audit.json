@@ -1,0 +1,32 @@
+{
+  "schemas": [
+    {
+      "file": "bars_coverage_manifest.schema.json",
+      "schema_version": "bars_coverage.v1",
+      "required_count": 3,
+      "properties_count": 3,
+      "structural_hash": "1d265c6290e3737e47885abd7ee88a7867fc86a2aba8b5eb9f773ecd88e965f8",
+      "stored_hash": null,
+      "drift": false
+    },
+    {
+      "file": "bars_download_manifest.schema.json",
+      "schema_version": "bars_manifest.v1",
+      "required_count": 10,
+      "properties_count": 13,
+      "structural_hash": "c623cf8a6b92b618ac912364c890d4088d20f23ffc73e69d22491f712ce2b880",
+      "stored_hash": null,
+      "drift": false
+    },
+    {
+      "file": "manifest.schema.json",
+      "schema_version": "v1",
+      "required_count": 11,
+      "properties_count": 18,
+      "structural_hash": "268ae84b6c682527f76f4509d47eb1c7d2b5d643285738c7b865b9c0cfd6df11",
+      "stored_hash": null,
+      "drift": false
+    }
+  ],
+  "drift_count": 0
+}

@@ -1,0 +1,8 @@
+{
+  "schemas": 3,
+  "fixtures": 2,
+  "drift": 0,
+  "rule_errors": 0,
+  "invalid_examples": 1,
+  "duration_sec": 0.104
+}

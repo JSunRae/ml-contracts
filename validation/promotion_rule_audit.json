@@ -1,0 +1,16 @@
+{
+  "referenced_metric_vars": [
+    "metrics.f1_macro",
+    "metrics.max_drawdown_sim",
+    "metrics.sharpe_sim"
+  ],
+  "schema_metrics": [
+    "brier",
+    "ece",
+    "f1_macro",
+    "max_drawdown_sim",
+    "sharpe_sim"
+  ],
+  "missing_metrics": [],
+  "valid": true
+}

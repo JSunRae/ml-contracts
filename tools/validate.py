@@ -10,6 +10,33 @@ def _load_text(p: pathlib.Path) -> str:
     return pathlib.Path(p).read_text()
 
 
+def _resolve_manifest_schema_path(manifest: dict, schema_path: pathlib.Path) -> pathlib.Path:
+    """Return the schema path adjusted for manifest schema_version if available.
+
+    Allows backward compatibility for older manifest versions by looking for
+    sibling versioned schema snapshots such as manifest.schema.v1.json.
+    """
+    version = manifest.get("schema_version")
+    if not version:
+        return schema_path
+
+    # Normalize to lowercase, but keep original for filename construction
+    version_str = str(version).strip()
+    if not version_str:
+        return schema_path
+
+    # If user already pointed at a versioned schema, keep it
+    if f".{version_str}" in schema_path.name:
+        return schema_path
+
+    candidate_name = f"{schema_path.stem}.{version_str}{schema_path.suffix}"
+    candidate = schema_path.with_name(candidate_name)
+    if candidate.exists():
+        return candidate
+
+    return schema_path
+
+
 def _choose_validator(schema: dict):
     """Pick a jsonschema Validator based on $schema meta.
     Defaults to Draft202012Validator; supports draft-07 for bars schemas.
@@ -34,8 +61,11 @@ def validate_manifest(manifest_path, schema_path):
     Validate manifest against schema. Backward compatible: manifests without
     export_manifest.data_collection still pass.
     """
-    m, s = _load(manifest_path), _load(schema_path)
-    _validate_instance(m, s)
+    schema_path_obj = pathlib.Path(schema_path)
+    manifest = _load(manifest_path)
+    resolved_schema_path = _resolve_manifest_schema_path(manifest, schema_path_obj)
+    schema = _load(resolved_schema_path)
+    _validate_instance(manifest, schema)
     return True
 
 
