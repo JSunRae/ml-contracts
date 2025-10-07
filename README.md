@@ -5,10 +5,19 @@ Canonical contracts repository for schemas, policy, and fixtures shared by ML (T
 ## Table of Contents
 
 - Overview
-  - Versioning & Governance
-  - Contents
+  - Schemas
   - Fixtures
-  - Consumption (Downstream expectations)
+  - Promotion governance at a glance
+  - Downstream consumption
+- Getting Started
+  - Environment setup
+  - Run DocSync
+  - Validate manifests & policies
+  - Regenerate fixtures
+- Contributing
+  - Workflow checklist
+  - Promotion rule and schema changes
+  - Downstream coordination
 - Data Collection Policy
 - Model Input Sequence Definitions
 - Validation Quickstart
@@ -18,32 +27,30 @@ Canonical contracts repository for schemas, policy, and fixtures shared by ML (T
 
 ---
 
-## Versioning & Governance
+## Overview
 
-- Schema Versioning:
-  - The `schema_version` starts at "v1". Any breaking change to required fields (add/remove/modify) requires incrementing the `schema_version` (e.g., to "v2") and tagging a release (e.g., `v2.0.0`).
-  - Consumers (TF_1, Trading) must bump their submodule and update validators to match the new schema version whenever `schema_version` changes.
-  - All breaking changes must be accompanied by a release tag (e.g., `v2.0.0`).
-- Change Review:
-  - All changes require review by @JSunRae (see CODEOWNERS).
+The contracts repo hosts the canonical JSON Schemas, JSON-Logic promotion rules, and curated fixtures that TF_1 and Trading rely on to keep export/promotion pipelines aligned. Everything in this repo is versioned, reviewed, and consumed downstream via git submodules.
 
-## Contents
+### Schemas
 
-- `schemas/manifest.schema.json` — model export manifest (v1)
-- `schemas/bars_download_manifest.schema.json` — per-line record schema for Trading's append-only bars downloads log (JSONL)
-- `schemas/bars_coverage_manifest.schema.json` — schema for Trading's compact coverage index (JSON)
-- `rules/promotion.rule.json` — JSON-Logic promotion thresholds
-- `fixtures/l2_fixture.csv` / `.parquet` — tiny canonical L2/curated sample
-- `tools/validate.py` — helper for CI/tests
-- `contracts/policies/data_collection_policy_v1.json` — canonical defaults for data collection
- - `contracts/fixtures/*.sample.*` — example instances for the schemas above
+- `schemas/manifest.schema.json` — authoritative model export manifest (`schema_version="v2"`). Historical snapshots (`schemas/manifest.schema.v1.json`, `schemas/manifest.schema.v2.json`) remain for validation of legacy artifacts.
+- `schemas/bars_download_manifest.schema.json` (`*.v1.json`) — append-only bars download manifest used to audit historical bars drops line-by-line (JSONL).
+- `schemas/bars_coverage_manifest.schema.json` (`*.v1.json`) — coverage index summarizing per-symbol/bar-size availability (JSON).
+- Schema checksum files live in `checksums/` and are regenerated via `python3 tools/generate_checksums.py` before cutting a release.
 
-## Fixtures
+### Fixtures
 
-- CSV and Parquet formats are provided in `fixtures/`.
-- Regenerate Parquet via `fixtures/make_parquet.py`.
+- `fixtures/l2_fixture.csv` / `fixtures/l2_fixture.parquet` — canonical Level-2 sample; keep CSV→Parquet synchronized via `python3 fixtures/make_parquet.py`.
+- `contracts/fixtures/*.json` — contract-aligned export manifests, including legacy snapshots and policy aware examples.
+- `validation/*.json` — DocSync-compatible audit outputs for schemas, promotion rules, and fixtures.
 
-## Consumption
+### Promotion governance at a glance
+
+- Promotion gating logic resides in `rules/promotion.rule.json` and is audited in `validation/promotion_rule_audit.json`.
+- Schema changes require a `schema_version` bump inside the JSON payload and an annotated git tag (`v1.x.y` for additive, `v2.0.0` for breaking).
+- Any governance change (schema, rule, fixture) must update `CHANGELOG.md` and the Verification notes table in this README.
+
+### Downstream consumption
 
 Downstream repos should:
 - Track schema changes via tags and `schema_version`.
@@ -53,8 +60,78 @@ Downstream repos should:
   - `dataset_version` – semantic identifier for the parquet bundle TF_1 trained on.
   - `data_hash` – canonical sha256 over the curated dataset contents (see `docs/NORTH_STAR.md`).
   - `feature_hash` – sha256 of the exported feature set definition.
-- Provide the expanded evaluation diagnostics
-  (`metrics`, `latency_metrics`, `stability`, `regime_metrics`, `calibration.metrics`) so the shared promotion rule can gate on them.
+- Provide the expanded evaluation diagnostics (`metrics`, `latency_metrics`, `stability`, `regime_metrics`, `calibration.metrics`) so the shared promotion rule can gate on them.
+
+## Getting Started
+
+### Environment setup
+
+1. Use Python 3.10+ and create an isolated virtualenv:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -U pip jsonschema pandas pyarrow docsync
+   ```
+2. Install any additional validator dependencies your downstream tooling requires (pytest is only needed for local test runs).
+
+### Run DocSync
+
+Run DocSync from the repo root to compare docs against the audited artifacts:
+
+```bash
+docsync scan --root "$(pwd)"
+docsync validate --root "$(pwd)"
+```
+
+Attach any WARN/ERROR reports to PRs so reviewers can verify deltas.
+
+### Validate manifests & policies
+
+Use `tools/validate.py` for schema and policy checks:
+
+```bash
+python3 tools/validate.py --manifest fixtures/model_manifest_valid.json schema=schemas/manifest.schema.json
+python3 tools/validate.py --manifest contracts/fixtures/export_manifest_with_policy.json --policy contracts/fixtures/policy_v1.json schema=schemas/manifest.schema.json
+```
+
+For bars manifests:
+
+```bash
+python3 tools/validate.py bars-jsonl contracts/fixtures/bars_download_manifest.sample.jsonl
+python3 tools/validate.py bars-coverage contracts/fixtures/bars_coverage_manifest.sample.json
+```
+
+### Regenerate fixtures
+
+- Refresh the parquet fixture whenever `fixtures/l2_fixture.csv` changes:
+  ```bash
+  python3 fixtures/make_parquet.py
+  ```
+- If you update schema-carrying fixtures, re-run `python3 tools/generate_checksums.py` to refresh `checksums/*.sha256` before committing.
+
+## Contributing
+
+### Workflow checklist
+
+1. Update or add schemas/rules/fixtures in place—no duplication in new folders.
+2. Regenerate dependent artifacts (`fixtures/make_parquet.py`, `tools/generate_checksums.py`).
+3. Run DocSync (`docsync scan` + `docsync validate`) and collect WARN/ERROR output for reviewers.
+4. Validate affected manifests or policies with `tools/validate.py` and execute tests via `python3 -m pytest -q` when schema logic changes.
+5. Update `CHANGELOG.md` and the Verification notes table in this README when behavior shifts.
+
+### Promotion rule and schema changes
+
+- The `schema_version` starts at "v1". Any breaking change to required fields (add/remove/modify) requires incrementing the `schema_version` (e.g., to "v2") and tagging a release (e.g., `v2.0.0`).
+- Consumers (TF_1, Trading) must bump their submodule and update validators to match the new schema version whenever `schema_version` changes.
+- Use semantic version tags: `v1.x.y` for additive/non-breaking, `v2.0.0` for the next breaking release.
+- Every change must be reviewed by @JSunRae (see `CODEOWNERS`). Include DocSync artifacts and validator output in the PR description.
+- When promotion thresholds change, update `rules/promotion.rule.json`, refresh `validation/promotion_rule_audit.json`, and document the new predicate expectations in both `CHANGELOG.md` and the README.
+
+### Downstream coordination
+
+- After merging, cut a release tag and notify TF_1 and Trading so they can re-pin their submodules and rerun CI.
+- Share DocSync validation bundles (scan + validate reports) and attach them to the release announcement for traceability.
+- Confirm downstream promotion services have reloaded updated schemas/rules before toggling enforcement.
 
 ## Data Collection Policy
 
@@ -131,9 +208,9 @@ Manifests can encode this inside `input_signature` without changing the schema, 
 Validate a manifest against the schema and optionally compare to policy:
 
 ```bash
-python3 tools/validate.py contracts/fixtures/export_manifest_with_policy.json schema=schemas/manifest.schema.json
+python3 tools/validate.py --manifest contracts/fixtures/export_manifest_with_policy.json schema=schemas/manifest.schema.json
 
-python3 tools/validate.py contracts/fixtures/export_manifest_with_policy.json contracts/fixtures/policy_v1.json \
+python3 tools/validate.py --manifest contracts/fixtures/export_manifest_with_policy.json --policy contracts/fixtures/policy_v1.json \
   schema=schemas/manifest.schema.json
 ```
 

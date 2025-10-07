@@ -131,11 +131,11 @@ def compare_manifest_to_policy(manifest_path, policy_path):
     return warnings
 
 def main(argv=None):
-    argv = argv or sys.argv[1:]
+    argv = list(argv or sys.argv[1:])
     if not argv or argv[0] in {"-h", "--help"}:
         print(
             "Usage:\n"
-            "  Export manifest: validate.py <manifest.json> [policy.json] [schema=schemas/manifest.schema.json]\n"
+            "  Export manifest: validate.py [--manifest <manifest.json>] [--policy <policy.json>] [schema=schemas/manifest.schema.json]\n"
             "  Bars JSONL:      validate.py bars-jsonl <bars_download_manifest.jsonl> [schema=schemas/bars_download_manifest.schema.json]\n"
             "  Bars coverage:   validate.py bars-coverage <bars_coverage_manifest.json> [schema=schemas/bars_coverage_manifest.schema.json]",
             file=sys.stderr,
@@ -171,14 +171,41 @@ def main(argv=None):
         return 0
 
     # Default path: export manifest validation (with optional policy compare)
-    manifest_path = pathlib.Path(argv[0])
+    manifest_path = None
     policy_path = None
     schema_path = pathlib.Path("schemas/manifest.schema.json")
-    for arg in argv[1:]:
-        if arg.startswith("schema="):
+
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg == "--manifest":
+            i += 1
+            if i >= len(argv):
+                print("ERROR: --manifest requires a path", file=sys.stderr)
+                return 2
+            manifest_path = pathlib.Path(argv[i])
+        elif arg == "--policy":
+            i += 1
+            if i >= len(argv):
+                print("ERROR: --policy requires a path", file=sys.stderr)
+                return 2
+            policy_path = pathlib.Path(argv[i])
+        elif arg.startswith("--schema="):
             schema_path = pathlib.Path(arg.split("=", 1)[1])
-        else:
+        elif arg.startswith("schema="):
+            schema_path = pathlib.Path(arg.split("=", 1)[1])
+        elif manifest_path is None:
+            manifest_path = pathlib.Path(arg)
+        elif policy_path is None:
             policy_path = pathlib.Path(arg)
+        else:
+            print(f"ERROR: unexpected argument '{arg}'", file=sys.stderr)
+            return 2
+        i += 1
+
+    if manifest_path is None:
+        print("ERROR: missing manifest path (use --manifest <path>)", file=sys.stderr)
+        return 2
 
     validate_manifest(str(manifest_path), str(schema_path))
     print("Schema validation: PASS")
