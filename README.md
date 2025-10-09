@@ -108,6 +108,7 @@ python3 tools/validate.py bars-coverage contracts/fixtures/bars_coverage_manifes
   python3 fixtures/make_parquet.py
   ```
 - If you update schema-carrying fixtures, re-run `python3 tools/generate_checksums.py` to refresh `checksums/*.sha256` before committing.
+- `python3 tools/generate_checksums.py` now also writes `artifacts/current_manifest_hash.json`, keeping the manifest schema hash aligned for release automation.
 
 ## Contributing
 

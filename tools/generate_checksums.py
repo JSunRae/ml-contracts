@@ -8,7 +8,12 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from validation_lib import load_json, compute_structural_hash, write_checksum
+from validation_lib import load_json, compute_structural_hash, write_checksum, dump_json
+from export_manifest_hash import (
+    compute_manifest_hash,
+    DEFAULT_SCHEMA as MANIFEST_SCHEMA_PATH,
+    DEFAULT_ARTIFACT as MANIFEST_ARTIFACT_PATH,
+)
 
 SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"
 CHECKSUM_DIR = Path(__file__).resolve().parent.parent / "checksums"
@@ -24,6 +29,10 @@ def main() -> int:
         h = compute_structural_hash(schema)
         write_checksum(CHECKSUM_DIR, schema_file, h)
         print(f"WROTE {schema_file.name}: {h}")
+
+    hash_hex = compute_manifest_hash(MANIFEST_SCHEMA_PATH)
+    dump_json(MANIFEST_ARTIFACT_PATH, {"schema": str(MANIFEST_SCHEMA_PATH), "sha256": hash_hex})
+    print(f"WROTE manifest hash artifact: {hash_hex} -> {MANIFEST_ARTIFACT_PATH}")
     return 0
 
 
