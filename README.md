@@ -153,6 +153,7 @@ Verification notes
 - Policy mismatch produces warnings (e.g., changing `l2_window` to `09:30-12:00` emits a WARNING without failing)
 - Model manifest v2 fixture: PASS (`fixtures/model_manifest_valid.json`)
 - Promotion rule evaluation covers thresholds for sharpe, F1 macro, minority recall, drawdown, latency (p95/max), and stability (variance/max_regime_delta).
+- Manifest schema hash CLI: `python tools/export_manifest_hash.py [--write-artifact]` prints the canonical sha256 consumed by Trading/Win promotion gates.
 
 ### Manifest v2 contract
 
