@@ -38,6 +38,18 @@ The contracts repo hosts the canonical JSON Schemas, JSON-Logic promotion rules,
 - `schemas/bars_coverage_manifest.schema.json` (`*.v1.json`) — coverage index summarizing per-symbol/bar-size availability (JSON).
 - Schema checksum files live in `checksums/` and are regenerated via `python3 tools/generate_checksums.py` before cutting a release.
 
+### Data Format Schemas
+
+- `data_formats/raw_market_data_v1.json` — **Input contract**: Raw market data format as exported by Trading Platform
+  - Seconds/Hourly/Minutes: 8 columns (timestamp, OHLC, volume, barCount, WAP)
+  - Level2: 11 columns (MBO events)
+  - Used by TF_1's `schema_validator.py` to validate raw inputs
+- `data_formats/enriched_market_data_v1.json` — **Output contract**: Enriched market data format after TF_1 mirror build
+  - Seconds/Hourly: 14 columns (8 raw + 6 vendor indicators: VWAP, EMAs, MACD), zero NaNs required
+  - Minutes: 8 columns unchanged (WAP NaNs acceptable)
+  - Level2: 6 columns (MBP format after preprocessing)
+  - Used by TF_1's `validate_parquet.py` and training pipelines
+
 ### Fixtures
 
 - `fixtures/l2_fixture.csv` / `fixtures/l2_fixture.parquet` — canonical Level-2 sample; keep CSV→Parquet synchronized via `python3 fixtures/make_parquet.py`.

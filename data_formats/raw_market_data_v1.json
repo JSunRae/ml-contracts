@@ -1,0 +1,290 @@
+{
+  "schema_version": "v1",
+  "description": "Raw market data format specification - defines column structure FROM Trading Platform exports (input contract)",
+  "frequencies": {
+    "Seconds": {
+      "description": "1-second OHLCV bars as exported by Trading Platform",
+      "columns": {
+        "timestamp": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false,
+          "description": "Bar timestamp in string format (Trading Platform export format)"
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": true,
+          "description": "Weighted average price - often 100% NaN in raw exports (vendor did not populate)",
+          "repairable": true
+        }
+      },
+      "total_columns": 8,
+      "repair_adds_columns": ["VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "notes": "Raw files contain ONLY 8 columns. Vendor indicators (VWAP/EMAs/MACD) are NOT in raw exports - they are added by TF_1's repair_hourly_columns() during mirror build."
+    },
+    "Hourly": {
+      "description": "1-hour OHLCV bars as exported by Trading Platform",
+      "columns": {
+        "timestamp": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": true,
+          "description": "Often 100% NaN in raw exports",
+          "repairable": true
+        }
+      },
+      "total_columns": 8,
+      "repair_adds_columns": ["VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "notes": "Same structure as Seconds. All vendor indicators added by repair_hourly_columns()."
+    },
+    "Minutes": {
+      "description": "1-minute OHLCV bars as exported by Trading Platform",
+      "columns": {
+        "timestamp": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": true,
+          "description": "WAP NaNs (~17.5%) are legitimate market gaps during low liquidity periods",
+          "repairable": false
+        }
+      },
+      "total_columns": 8,
+      "repair_adds_columns": [],
+      "notes": "Same 8-column structure as Seconds/Hourly. Minutes files are NOT repaired - they're copied unchanged to mirror. WAP NaNs are preserved (market gaps, not data quality issues)."
+    },
+    "Level2": {
+      "description": "Market-By-Order (MBO) events as exported by Trading Platform",
+      "columns": {
+        "timestamp_ns": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false,
+          "description": "Event timestamp in nanoseconds"
+        },
+        "action": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false,
+          "description": "Order book action (add, modify, delete, etc.)"
+        },
+        "side": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false,
+          "description": "Order side (B/A, BID/ASK, or vendor-specific codes)"
+        },
+        "price": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "size": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "level": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false,
+          "description": "Depth level (0=best bid/ask, 1=second level, etc.)"
+        },
+        "exchange": {
+          "dtype": "string",
+          "required": false,
+          "nullable": true
+        },
+        "symbol": {
+          "dtype": "string",
+          "required": false,
+          "nullable": true
+        },
+        "source": {
+          "dtype": "string",
+          "required": false,
+          "nullable": true
+        },
+        "ts_utc": {
+          "dtype": "datetime64[ns, UTC]",
+          "required": false,
+          "nullable": true,
+          "description": "UTC timestamp (may be derived from timestamp_ns)"
+        },
+        "ts_recv": {
+          "dtype": "datetime64[ns, UTC]",
+          "required": false,
+          "nullable": true,
+          "description": "Receive timestamp"
+        }
+      },
+      "total_columns": 11,
+      "notes": "Raw L2 files contain MBO (Market-By-Order) events, NOT MBP (Market-By-Price) snapshots. TF_1's preprocess_databento.py converts MBO→MBP format for feature engineering."
+    }
+  },
+  "mirror_behavior": {
+    "Seconds": {
+      "action": "repair",
+      "adds_columns": ["VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "timestamp_conversion": "string → datetime64[ns, UTC]",
+      "output_columns": 14
+    },
+    "Hourly": {
+      "action": "repair",
+      "adds_columns": ["VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "timestamp_conversion": "string → datetime64[ns, UTC]",
+      "output_columns": 14
+    },
+    "Minutes": {
+      "action": "copy",
+      "adds_columns": [],
+      "timestamp_conversion": "none (kept as string)",
+      "output_columns": 8
+    },
+    "Level2": {
+      "action": "copy",
+      "adds_columns": [],
+      "preprocessing": "MBO→MBP conversion via preprocess_databento.py (separate step)",
+      "output_columns": 11
+    }
+  },
+  "common_expectations": {
+    "file_format": "Apache Parquet (.ftr or .parquet extension)",
+    "compression": "varies by vendor",
+    "index": false,
+    "notes": "Raw files use .ftr extension (Feather v2 = Parquet). Trading Platform exports preserve vendor format."
+  },
+  "legacy_issues": {
+    "WAP_nans": {
+      "description": "WAP column often 100% NaN in raw exports (2020-2025)",
+      "reason": "Vendor (IBKR/TWS) did not populate WAP field in historical exports",
+      "remediation": "repair_hourly_columns() recomputes WAP from OHLC data during mirror build",
+      "affects": ["Seconds", "Hourly", "Minutes"]
+    },
+    "vendor_indicators_absent": {
+      "description": "VWAP, EMAs, MACD NOT present in raw exports",
+      "reason": "Trading Platform exports raw OHLCV data only (no derived indicators)",
+      "remediation": "repair_hourly_columns() computes vendor indicators from scratch during mirror build",
+      "affects": ["Seconds", "Hourly"]
+    },
+    "ftr_extension": {
+      "description": "Raw files use .ftr extension (Feather v2 format)",
+      "reason": "Historical naming convention from pandas/pyarrow Feather API",
+      "notes": "Feather v2 IS Apache Parquet - no conversion needed, just read with pd.read_parquet()",
+      "affects": ["all frequencies"]
+    }
+  },
+  "validation": {
+    "tool": "src/data_processing/schema_validator.py",
+    "usage": "Validates raw Trading Platform exports against this schema",
+    "fail_on": [
+      "Missing required columns",
+      "Wrong dtypes",
+      "NaNs in non-nullable columns (OHLCV, barCount)"
+    ],
+    "allow": [
+      "WAP NaNs (expected in raw exports)",
+      "Missing vendor indicators (not in raw data)"
+    ]
+  }
+}

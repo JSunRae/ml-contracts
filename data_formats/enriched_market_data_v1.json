@@ -1,0 +1,350 @@
+{
+  "schema_version": "v1",
+  "description": "Enriched market data format specification - defines column structure AFTER mirror build repair/preprocessing",
+  "frequencies": {
+    "Seconds": {
+      "description": "1-second OHLCV bars enriched with vendor-calculated indicators",
+      "columns": {
+        "timestamp": {
+          "dtype": "datetime64[ns, UTC]",
+          "required": true,
+          "nullable": false,
+          "description": "Bar timestamp (converted from string to UTC datetime)"
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Weighted average price - NaNs removed during repair (filled or recomputed)"
+        },
+        "VWAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Volume-weighted average price - computed during repair"
+        },
+        "9EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "9-period exponential moving average - computed during repair"
+        },
+        "20EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "20-period exponential moving average"
+        },
+        "50EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "50-period exponential moving average"
+        },
+        "200EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "200-period exponential moving average"
+        },
+        "MACD": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "MACD indicator - computed during repair"
+        }
+      },
+      "total_columns": 14,
+      "validation_rules": {
+        "no_nans_allowed": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+        "no_nans_in_ohlcv": ["open", "high", "low", "close", "volume", "barCount"],
+        "timestamp_format": "datetime64[ns, UTC]"
+      },
+      "notes": "Post-repair Seconds files must have zero NaNs in vendor columns (WAP/VWAP/EMAs/MACD). repair_hourly_columns() ensures clean data."
+    },
+    "Hourly": {
+      "description": "1-hour OHLCV bars enriched with vendor-calculated indicators",
+      "columns": {
+        "timestamp": {
+          "dtype": "datetime64[ns, UTC]",
+          "required": true,
+          "nullable": false
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "NaNs removed during repair"
+        },
+        "VWAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "9EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "20EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "50EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "200EMA": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Always present in Hourly (sufficient warmup period)"
+        },
+        "MACD": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        }
+      },
+      "total_columns": 14,
+      "validation_rules": {
+        "no_nans_allowed": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+        "no_nans_in_ohlcv": ["open", "high", "low", "close", "volume", "barCount"],
+        "timestamp_format": "datetime64[ns, UTC]"
+      },
+      "notes": "Same structure as Seconds. All vendor columns must be non-NaN after repair."
+    },
+    "Minutes": {
+      "description": "1-minute OHLCV bars copied unchanged (no enrichment)",
+      "columns": {
+        "timestamp": {
+          "dtype": "string",
+          "required": true,
+          "nullable": false,
+          "description": "Bar timestamp (kept as string, NOT converted to datetime)"
+        },
+        "open": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "high": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "low": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "close": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "volume": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false
+        },
+        "barCount": {
+          "dtype": "int64",
+          "required": true,
+          "nullable": false
+        },
+        "WAP": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": true,
+          "description": "WAP NaNs are PRESERVED (legitimate market gaps, not data quality issues)"
+        }
+      },
+      "total_columns": 8,
+      "validation_rules": {
+        "no_nans_in_ohlcv": ["open", "high", "low", "close", "volume", "barCount"],
+        "nans_allowed": ["WAP"],
+        "timestamp_format": "string"
+      },
+      "notes": "Minutes files are copied unchanged from raw exports. WAP NaNs (~17.5%) are legitimate market gaps during low liquidity periods."
+    },
+    "Level2": {
+      "description": "Market-By-Price (MBP) snapshots after preprocessing MBO events",
+      "columns": {
+        "timestamp_utc": {
+          "dtype": "datetime64[ns, UTC]",
+          "required": true,
+          "nullable": false,
+          "description": "Snapshot timestamp (UTC)"
+        },
+        "bid_price": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Best bid price"
+        },
+        "ask_price": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Best ask price"
+        },
+        "bid_size": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Best bid size"
+        },
+        "ask_size": {
+          "dtype": "float64",
+          "required": true,
+          "nullable": false,
+          "description": "Best ask size"
+        },
+        "l2": {
+          "dtype": "object",
+          "required": true,
+          "nullable": false,
+          "description": "Depth levels array - list of dicts with bid_price/ask_price/bid_size/ask_size for each depth level"
+        }
+      },
+      "total_columns": 6,
+      "validation_rules": {
+        "no_nans_allowed": ["timestamp_utc", "bid_price", "ask_price", "bid_size", "ask_size", "l2"],
+        "spread_check": "bid_price < ask_price",
+        "depth_check": "len(l2) >= 1"
+      },
+      "notes": "Level2 files must be preprocessed (MBO→MBP) before use. Raw L2 files (11 columns) are NOT in this format - run preprocess_databento.py first."
+    }
+  },
+  "common_expectations": {
+    "file_format": "Apache Parquet",
+    "extensions": [".parquet", ".ftr"],
+    "compression": "snappy",
+    "index": false,
+    "notes": "All enriched files written by build_clean_mirror.py use parquet format regardless of source extension"
+  },
+  "quality_gates": {
+    "validation_script": "tools/validate_parquet.py",
+    "expectations": {
+      "Seconds": {
+        "total_columns": 14,
+        "zero_nans_in": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+        "dtype_checks": {
+          "timestamp": "datetime64[ns, UTC]",
+          "barCount": "int64"
+        }
+      },
+      "Hourly": {
+        "total_columns": 14,
+        "zero_nans_in": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+        "dtype_checks": {
+          "timestamp": "datetime64[ns, UTC]",
+          "barCount": "int64"
+        }
+      },
+      "Minutes": {
+        "total_columns": 8,
+        "zero_nans_in": ["open", "high", "low", "close", "volume", "barCount"],
+        "nans_acceptable_in": ["WAP"],
+        "dtype_checks": {
+          "timestamp": "string",
+          "barCount": "int64"
+        }
+      },
+      "Level2": {
+        "total_columns": 6,
+        "zero_nans_in": ["timestamp_utc", "bid_price", "ask_price", "bid_size", "ask_size"],
+        "dtype_checks": {
+          "timestamp_utc": "datetime64[ns, UTC]",
+          "l2": "object"
+        }
+      }
+    }
+  },
+  "usage_by_downstream": {
+    "prepare_data": {
+      "expects": "enriched_market_data_v1",
+      "reads_from": "Stocks_clean_v1/ (mirror root)",
+      "validation": "Validates column presence and zero NaNs in vendor columns before feature generation",
+      "failure_mode": "Abort with DATA_INTEGRITY error if vendor columns missing or have NaNs"
+    },
+    "train_seconds": {
+      "expects": "enriched Seconds files (14 columns)",
+      "requires": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "validation": "Checks preprocessing_manifest.json references enriched data"
+    },
+    "train_hourly": {
+      "expects": "enriched Hourly files (14 columns)",
+      "requires": ["WAP", "VWAP", "9EMA", "20EMA", "50EMA", "200EMA", "MACD"],
+      "validation": "Same as train_seconds"
+    },
+    "train_l2": {
+      "expects": "preprocessed Level2 MBP snapshots (6 columns)",
+      "requires": ["timestamp_utc", "bid_price", "ask_price", "bid_size", "ask_size", "l2"],
+      "validation": "Checks l2 column is list of dicts with valid depth data"
+    }
+  }
+}
